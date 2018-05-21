@@ -77,7 +77,7 @@ var publicRequest = function(path){
   return path.substring(0, 8) == "/public/";
 }
 
-var send404Error = function(req, res) {
+var send404Error = function(res) {
   fs.readFile(__dirname + '/pages/goblet-not-found/index.html', function(err, data){
     res.writeHead(404, {'Content-Type': 'text/html'});
     if (err) {
@@ -90,23 +90,29 @@ var send404Error = function(req, res) {
   });
 }
 
+var servePublicFile = function(path, res){
+  fs.readFile(__dirname + path, function(err, data){
+    if (err) {
+      return send404Error(res);
+    }
+    res.end(data);
+  });
+}
+
 var serverfunc = function (req, res) {
   var urldata = url.parse(req.url, true);
   var path = urldata.pathname;
   console.log('Got request for ' + path);
   if (publicRequest(path)) {
-    console.log('Public request!');
+    return servePublicFile(path, res);
   }
-  fs.readFile('.' + path + '.html', function(err, data){
+  fs.readFile(__dirname + '/pages/' + path + 'index.html', function(err, data){
     if (err) {
-      return send404Error(req, res);
+      return send404Error(res);
     }
     res.writeHead(200, {'Content-Type': 'text/html'});
-    res.write(uc('The date and time are currently: ') + dt.myDateTime());
-    res.write(data);
-    res.end();
+    res.end(data);
   });
-  //res.write('You entered the url: ' + req.url)
 };
 
 http.createServer(serverfunc).listen(8080);
