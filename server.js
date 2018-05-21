@@ -1,4 +1,4 @@
-var express = require('express');
+/*var express = require('express');
 var fs = require('fs');
 var app = express();
 
@@ -55,3 +55,58 @@ var server = app.listen(8080, function () {
 
    console.log("Example app listening at http://%s:%s", host, port)
 })
+
+var http = require('http');
+var url = require('url');
+var dt = require('./myfirstmodule');
+var fs = require('fs');
+var uc = require('upper-case');
+var events = require('events');
+
+var eventEmitter = new events.EventEmitter();
+
+var myEventHandler = function (wth) {
+  console.log('I hear a scream! ' + wth);
+};*/
+
+var http = require('http');
+var url = require('url');
+var fs = require('fs');
+
+var publicRequest = function(path){
+  return path.substring(0, 8) == "/public/";
+}
+
+var send404Error = function(req, res) {
+  fs.readFile(__dirname + '/pages/goblet-not-found/index.html', function(err, data){
+    res.writeHead(404, {'Content-Type': 'text/html'});
+    if (err) {
+      res.write('Something went terribly wrong!');
+      return res.end()
+    }
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.write(data);
+    res.end();
+  });
+}
+
+var serverfunc = function (req, res) {
+  var urldata = url.parse(req.url, true);
+  var path = urldata.pathname;
+  console.log('Got request for ' + path);
+  if (publicRequest(path)) {
+    console.log('Public request!');
+  }
+  fs.readFile('.' + path + '.html', function(err, data){
+    if (err) {
+      return send404Error(req, res);
+    }
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.write(uc('The date and time are currently: ') + dt.myDateTime());
+    res.write(data);
+    res.end();
+  });
+  //res.write('You entered the url: ' + req.url)
+};
+
+http.createServer(serverfunc).listen(8080);
