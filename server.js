@@ -1,34 +1,121 @@
+var client_id = process.env.SPOTIFY_ID;
+var client_secret = process.env.SPOTIFY_SECRET;
+var genius_id = process.env.GENIUS_ID;
+
 var http = require('http');
 var url = require('url');
 var fs = require('fs');
+var querystring = require('querystring');
+var request = require('request');
+var Lyricist = require('lyricist')
+var lyricist = new Lyricist(genius_id);
+var jsesc = require('jsesc');
 
 var publicRequest = function(path){
   return path.substring(0, 8) == "/public/";
 }
 
-var spotifyLogin = function(req, res){
-  var scope = 'user-read-private user-read-email';
+var redirect_uri = 'http://localhost:8080/callback'
+
+var redirect = function(res, uri) {
+  console.log('Attempting to redirect to %s...', uri)
   res.writeHead(302, {
-    'Location': 'https://accounts.spotify.com/authorize?' + 'response_type=code&' + 'client_id=bf7432eaab5c4a158b93c911b150eb9b&' + 'show_dialog=true&' + 'redirect_uri=http://localhost:8080/callback'
+    'Location': uri
+  });
+  res.end();
+}
+
+var getSong = async function(urldata, res) {
+  var searchString = urldata.query['song'].replace(/[^\x00-\x7F]/g, "") + ' ' +
+                     urldata.query['artist'].replace(/[^\x00-\x7F]/g, "");
+  console.log('Searching Genius for \'%s\'', searchString);
+  var songs = await lyricist.search(searchString)
+  if (songs === undefined || songs.length == 0) {
+    res.writeHead(200, {'Content-Type': 'json'});
+    res.end(JSON.stringify('Nothing Here'));
+  } else {
+    var song_id = songs[0].id
+    var song = await lyricist.song(song_id, { fetchLyrics: true });
+    res.writeHead(200, {'Content-Type': 'json'});
+    res.end(JSON.stringify(song.lyrics));
+  }
+}
+
+var accessGranted = function(urldata, res){
+  res.writeHead(200, {'Content-Type': 'text/html'});
+  res.end(urldata.pathname);
+}
+
+var spotifyLogin = function(req, res){
+  var scope = 'user-read-currently-playing user-read-playback-state';
+  var querystr = querystring.stringify({
+    response_type: 'code',
+    client_id: client_id,
+    scope: scope,
+    show_dialog: 'true',
+    redirect_uri: redirect_uri
+  });
+  res.writeHead(302, {
+    'Location': ('https://accounts.spotify.com/authorize?' + querystr)
     //add other headers here...
   });
-  res.end()
-
-  /*res.redirect('') +
-    querystring.stringify({
-      response_type: 'code',
-      client_id: client_id,
-      scope: scope,
-      redirect_uri: redirect_uri,
-      state: state
-    }));*/
+  res.end();
 }
 
 var handleCallback = function(urldata, res){
   var params = urldata.query
-  console.log(params['code']);
-  res.writeHead(200, {'Content-Type': 'text/html'});
-  res.end('Did it!');
+  var song_name = 'tsh';
+  /*console.log(params['code']);
+  var options = {
+    url: 'https://api.spotify.com/v1/me/player/currently-playing',
+    headers: {
+      'Authorization': 'Bearer ' + params['code'],
+      json: true
+    }
+  };
+  request.get(options, function(error, response, body) {
+    console.log(body);
+  });*/
+
+    var authOptions = {
+      url: 'https://accounts.spotify.com/api/token',
+      form: {
+        code: params['code'],
+        redirect_uri: redirect_uri,
+        grant_type: 'authorization_code'
+      },
+      headers: {
+        'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+      },
+      json: true
+    };
+
+    request.post(authOptions, function(error, response, body) {
+      if (!error && response.statusCode === 200) {
+        var access_token = body.access_token,
+            refresh_token = body.refresh_token;
+
+        var options = {
+          url: 'https://api.spotify.com/v1/me/player/currently-playing',
+          headers: { 'Authorization': 'Bearer ' + access_token },
+          json: true
+        };
+
+        // use the access token to access the Spotify Web API
+        request.get(options, function(error, response, body) {
+          //console.log(body.item.name);
+          redirect(res, '/#' +
+            querystring.stringify({
+              access_token: access_token,
+              refresh_token: refresh_token
+            }));
+        });
+    }});
+
+
+  /*res.writeHead(200, {'Content-Type': 'text/html'});
+  res.write('test' + song_name);
+  res.end();*/
 }
 
 var send404Error = function(res) {
@@ -62,11 +149,14 @@ var serverfunc = function (req, res) {
     return spotifyLogin(req, res);
   } else if (path == '/callback') {
     return handleCallback(urldata, res);
+  } else if (path.substring(0, 5) == '/song'){
+    return getSong(urldata, res);
   }
   fs.readFile(__dirname + '/pages/' + path + 'index.html', function(err, data){
     if (err) {
       return send404Error(res);
     }
+    console.log(urldata);
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end(data);
   });
