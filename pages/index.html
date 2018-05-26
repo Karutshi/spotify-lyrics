@@ -2,19 +2,61 @@
 <html lang="en-US">
 <html>
 <head>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 <link rel="stylesheet" href="/public/style.css">
 <link rel="shortcut icon" type="image/x-icon" href="/public/goblet_icon.ico" />
 
 <!-- This is an easter egg! Congratulations. You did it!-->
 <!--Wow hello what a dick is thick!-->
 
-<title>Goblet: Death and Rebirth homepage</title>
+<title>Spotify Lyrics</title>
 <meta charset="UTF-8">
+
 <script>
+var access_token;
+var refresh_token;
+var current_song;
+var current_lyrics;
+var next_lyrics;
   function UserAction() {
       window.location.replace("/test");
   }
+  function GetLyrics(songname, artist) {
+    $.getJSON('http://localhost:8080/song?song=' + songname +
+              '&artist=' + artist, function(data) {
+        console.log('at least im here')
+        var lyrics = data;
+        document.getElementById('text2').html = lyrics;
+        document.getElementById('text2').textContent = lyrics;
+        console.log(access_token);
+    });
+  }
+
+  function setSong() {
+    jQuery.ajax({
+      url: 'https://api.spotify.com/v1/me/player/currently-playing',
+      type: 'GET',
+      beforeSend: function(xhr) {
+          console.log('At least im here?');
+          xhr.setRequestHeader("Authorization", "Bearer " + access_token);
+      },
+      success: function(response) {
+          console.log('At least im here?');
+          console.log(response.item);
+          var songname = response.item.name;
+          var artist = response.item.artists[0].name;
+          var album = response.item.album.name;
+          var txt = 'You are listening to: \n' + songname +
+                    '\nby ' + artist +
+                    '\nAlbum: ' + album;
+          document.getElementById('maintext').innerHtml = txt;
+          document.getElementById('maintext').textContent = txt;
+          GetLyrics(songname, artist);
+      }
+    });
+  }
 </script>
+
 </head>
 <body background="/public/background.png">
 
@@ -30,8 +72,22 @@
     <li><a href="https://www.facebook.com/gobdevofficial/"><img src="/public/facebook.png" style="height: 18px"></a></li>
 </ul>
 
-<h1 style="font-family:verdana; font-size:300%; text-align:center; color:white;">Spotify Lyrics</h1>
+<h1 id='maintext' style="font-family:verdana; font-size:300%; text-align:center; color:white;">Spotify Lyrics</h1>
 <button type="submit" onclick="UserAction()">Login</button>
+<button type="submit" onclick="setSong()">Refresh</button>
+<div class="text">
+  <p id='text2' style="font-family:verdana; font-size:100%; text-align:center; color:white;">Spotify Lyrics</p>
+</div>
+
+<script>
+
+  console.log(window.location.href)
+  access_token = new URL(window.location.href).hash.split('&').filter(function(el) { if(el.match('access_token') !== null) return true; })[0].split('=')[1];
+  refresh_token = new URL(window.location.href).hash.split('&').filter(function(el) { if(el.match('refresh_token') !== null) return true; })[0].split('=')[1];
+  console.log('At least im here?');
+  setSong(access_token)
+
+</script>
 
 </body>
 </html>
