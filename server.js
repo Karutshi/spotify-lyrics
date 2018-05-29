@@ -15,7 +15,7 @@ var publicRequest = function(path){
   return path.substring(0, 8) == "/public/";
 }
 
-var redirect_uri = 'http://localhost:8080/callback'
+var redirect_uri = ''
 
 var redirect = function(res, uri) {
   console.log('Attempting to redirect to %s...', uri)
@@ -162,6 +162,7 @@ var servePublicFile = function(path, res){
 }
 
 var serverfunc = function (req, res) {
+  redirect_uri = 'http://' + req.headers.host + '/callback'
   var urldata = url.parse(req.url, true);
   var path = urldata.pathname;
   console.log('Got a %s request for %s', req.method, path);
