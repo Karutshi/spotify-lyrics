@@ -1,6 +1,7 @@
 var client_id = process.env.SPOTIFY_ID;
 var client_secret = process.env.SPOTIFY_SECRET;
 var genius_id = process.env.GENIUS_ID;
+var cache_dir = process.env.CACHE_LOCATION ? process.env.CACHE_LOCATION : __dirname + '/cache/';
 
 var http = require('http');
 var url = require('url');
@@ -29,7 +30,7 @@ var getSong = async function(urldata, res) {
   var songname = urldata.query['song'].replace(/[^\x00-\x7F]/g, "");
   var artistname = urldata.query['artist'].replace(/[^\x00-\x7F]/g, "");
   var id = urldata.query['id'];
-  var cache_path = __dirname + '/cache/' + id;
+  var cache_path = cache_dir + id;
   if (fs.existsSync(cache_path)) {
     console.log("Cache hit! Reading song from cache...");
     fs.readFile(cache_path, function(err, data){
