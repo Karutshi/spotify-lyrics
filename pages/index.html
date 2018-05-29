@@ -3,6 +3,8 @@
 <html>
 <head>
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.4.2/react.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.4.2/react-dom.js"></script>
 <link rel="stylesheet" href="/public/style.css">
 <link rel="shortcut icon" type="image/x-icon" href="/public/goblet_icon.ico" />
 
@@ -21,9 +23,9 @@ var next_lyrics;
   function UserAction() {
       window.location.replace("/test");
   }
-  function GetLyrics(songname, artist) {
+  function GetLyrics(songname, artist, id) {
     $.getJSON('http://localhost:8080/song?song=' + songname +
-              '&artist=' + artist, function(data) {
+              '&artist=' + artist + '&id=' + id, function(data) {
         console.log('at least im here')
         var lyrics = data;
         document.getElementById('text2').html = lyrics;
@@ -37,21 +39,23 @@ var next_lyrics;
       url: 'https://api.spotify.com/v1/me/player/currently-playing',
       type: 'GET',
       beforeSend: function(xhr) {
-          console.log('At least im here?');
+          console.log('Requesting authorization with token: ' + access_token);
           xhr.setRequestHeader("Authorization", "Bearer " + access_token);
       },
-      success: function(response) {
-          console.log('At least im here?');
-          console.log(response.item);
-          var songname = response.item.name;
-          var artist = response.item.artists[0].name;
-          var album = response.item.album.name;
+      success: function(res) {
+          console.log('Got response from spotify!');
+          console.log(res);
+          var songname = res.item.name;
+          var artist = res.item.artists[0].name;
+          var album = res.item.album.name;
+          console.log(res.item.id);
+          var id = res.item.id
           var txt = 'You are listening to: \n' + songname +
                     '\nby ' + artist +
                     '\nAlbum: ' + album;
           document.getElementById('maintext').innerHtml = txt;
           document.getElementById('maintext').textContent = txt;
-          GetLyrics(songname, artist);
+          GetLyrics(songname, artist, id);
       }
     });
   }
@@ -84,7 +88,7 @@ var next_lyrics;
   console.log(window.location.href)
   access_token = new URL(window.location.href).hash.split('&').filter(function(el) { if(el.match('access_token') !== null) return true; })[0].split('=')[1];
   refresh_token = new URL(window.location.href).hash.split('&').filter(function(el) { if(el.match('refresh_token') !== null) return true; })[0].split('=')[1];
-  console.log('At least im here?');
+  console.log('Spotify tokens read.');
   setSong(access_token)
 
 </script>
