@@ -83,7 +83,6 @@ var spotifyLogin = function(req, res){
 var handleCallback = function(urldata, res){
   var params = urldata.query
   var song_name = 'tsh';
-  console.log(params['code']);
   var options = {
     url: 'https://api.spotify.com/v1/me/player/currently-playing',
     headers: {
@@ -95,7 +94,7 @@ var handleCallback = function(urldata, res){
     console.log('here it comes');
     console.log(body);
     });*/
-
+    console.log('Getting Spotify tokens...');
     var authOptions = {
       url: 'https://accounts.spotify.com/api/token',
       form: {
@@ -113,9 +112,6 @@ var handleCallback = function(urldata, res){
       if (!error && response.statusCode === 200) {
         var access_token = body.access_token,
             refresh_token = body.refresh_token;
-
-        console.log("Aww shit im feeling it!");
-        console.log(body);
 
         var options = {
           url: 'https://api.spotify.com/v1/me/player/currently-playing',
@@ -165,7 +161,6 @@ var serverfunc = function (req, res) {
   redirect_uri = 'http://' + req.headers.host + '/callback'
   var urldata = url.parse(req.url, true);
   var path = urldata.pathname;
-  console.log('Got a %s request for %s', req.method, path);
   if (publicRequest(path)) {
     return servePublicFile(path, res);
   } else if (path == '/login') {
@@ -179,7 +174,6 @@ var serverfunc = function (req, res) {
     if (err) {
       return send404Error(res);
     }
-    console.log(urldata);
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.end(data);
   });
