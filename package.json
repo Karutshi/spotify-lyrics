@@ -8,13 +8,15 @@
     "http": "0.0.0",
     "jsesc": "^2.5.1",
     "lyricist": "^2.2.2",
+    "react": "^16.4.0",
     "request": "^2.87.0",
     "url": "^0.11.0"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "postinstall": "mkdir -p ./cache"
   },
   "repository": {
     "type": "git",
@@ -24,6 +26,7 @@
     "spotify",
     "lyrics"
   ],
+  "build": "mkdir -p ./cache",
   "author": "Karutshi",
   "license": "ISC",
   "bugs": {
