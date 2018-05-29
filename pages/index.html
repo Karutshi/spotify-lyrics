@@ -17,7 +17,7 @@
 <script>
 var access_token;
 var refresh_token;
-var current_song;
+var current_song = "";
 var current_lyrics;
 var next_lyrics;
 
@@ -49,25 +49,30 @@ function hideLoader(){
   }
 
   function setSong() {
-    showLoader();
     jQuery.ajax({
       url: 'https://api.spotify.com/v1/me/player/currently-playing',
       type: 'GET',
       beforeSend: function(xhr) {
-          console.log('Requesting authorization from spotify.');
           xhr.setRequestHeader("Authorization", "Bearer " + access_token);
       },
       success: function(res) {
-          console.log('Got response from spotify!');
+          setTimeout(setSong, res.item.duration_ms - res.progress_ms + 1000);
           var songname = res.item.name;
           var artist = res.item.artists[0].name;
           var album = res.item.album.name;
           var id = res.item.id
+          if (id == current_song){
+            setTimeout(setSong, 5000);
+            return;
+          }
+          showLoader();
+          current_song = id;
           var txt = 'You are listening to: \n' + songname +
                     '\nby ' + artist +
                     '\nAlbum: ' + album;
           setText('maintext', txt);
           GetLyrics(songname, artist, id);
+          setTimeout(setSong, res.item.duration_ms - res.progress_ms - ((new Date).getTime() - res.timestamp) + 100);
       }
     });
   }
