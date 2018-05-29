@@ -1,5 +1,6 @@
 body {
     background: background.png;
+    background-attachment: fixed;
     background-repeat:   repeat-y;
     background-position: center top;
 }
