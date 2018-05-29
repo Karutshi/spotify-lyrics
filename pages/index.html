@@ -54,6 +54,7 @@ function setText(id, text){
           var txt = 'You are listening to: \n' + songname +
                     '\nby ' + artist +
                     '\nAlbum: ' + album;
+          document.getElementById('maintext').style.color = "yellow";
           setText('maintext', txt);
           GetLyrics(songname, artist, id);
       }
