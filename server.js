@@ -26,19 +26,37 @@ var redirect = function(res, uri) {
 }
 
 var getSong = async function(urldata, res) {
-  var searchString = urldata.query['song'].replace(/[^\x00-\x7F]/g, "") + ' ' +
-                     urldata.query['artist'].replace(/[^\x00-\x7F]/g, "");
-  console.log('Searching Genius for \'%s\'', searchString);
-  var songs = await lyricist.search(searchString)
-  if (songs === undefined || songs.length == 0) {
-    res.writeHead(200, {'Content-Type': 'json'});
-    res.end(JSON.stringify('Nothing Here'));
+  var songname = urldata.query['song'].replace(/[^\x00-\x7F]/g, "");
+  var artistname = urldata.query['artist'].replace(/[^\x00-\x7F]/g, "");
+  var id = urldata.query['id'];
+  var cache_path = __dirname + '/cache/' + id;
+  if (fs.existsSync(cache_path)) {
+    console.log("Cache hit! Reading song from cache...");
+    fs.readFile(cache_path, function(err, data){
+      if (err) {
+        res.writeHead(200, {'Content-Type': 'json'});
+        res.end("Could not read cached file!");
+      } else {
+        res.writeHead(200, {'Content-Type': 'json'});
+        res.end(data);
+      }});
   } else {
-    var song_id = songs[0].id
-    var song = await lyricist.song(song_id, { fetchLyrics: true });
-    res.writeHead(200, {'Content-Type': 'json'});
-    res.end(JSON.stringify(song.lyrics));
-  }
+    var searchString = songname + ' ' + artistname;
+    console.log('Cache miss! Searching Genius for \'%s\'', searchString);
+    var songs = await lyricist.search(searchString);
+    if (songs === undefined || songs.length == 0) {
+      fs.writeFile(cache_path, JSON.stringify('Nothing Here'));
+      res.writeHead(200, {'Content-Type': 'json'});
+      res.end(JSON.stringify('Nothing Here'));
+    } else {
+      var song_id = songs[0].id
+      var song = await lyricist.song(song_id, { fetchLyrics: true });
+      fs.writeFile(cache_path, JSON.stringify(song.lyrics));
+      console.log("Song saved to cache!");
+      res.writeHead(200, {'Content-Type': 'json'});
+      res.end(JSON.stringify(song.lyrics));
+    }
+    };
 }
 
 var accessGranted = function(urldata, res){
@@ -65,7 +83,7 @@ var spotifyLogin = function(req, res){
 var handleCallback = function(urldata, res){
   var params = urldata.query
   var song_name = 'tsh';
-  /*console.log(params['code']);
+  console.log(params['code']);
   var options = {
     url: 'https://api.spotify.com/v1/me/player/currently-playing',
     headers: {
@@ -73,9 +91,10 @@ var handleCallback = function(urldata, res){
       json: true
     }
   };
-  request.get(options, function(error, response, body) {
+  /*request.get(options, function(error, response, body) {
+    console.log('here it comes');
     console.log(body);
-  });*/
+    });*/
 
     var authOptions = {
       url: 'https://accounts.spotify.com/api/token',
@@ -94,6 +113,9 @@ var handleCallback = function(urldata, res){
       if (!error && response.statusCode === 200) {
         var access_token = body.access_token,
             refresh_token = body.refresh_token;
+
+        console.log("Aww shit im feeling it!");
+        console.log(body);
 
         var options = {
           url: 'https://api.spotify.com/v1/me/player/currently-playing',
