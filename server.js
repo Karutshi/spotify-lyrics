@@ -45,13 +45,13 @@ var getSong = async function(urldata, res) {
     console.log('Cache miss! Searching Genius for \'%s\'', searchString);
     var songs = await lyricist.search(searchString);
     if (songs === undefined || songs.length == 0) {
-      fs.writeFile(cache_path, JSON.stringify('Nothing Here'));
+      fs.writeFileSync(cache_path, JSON.stringify('Nothing Here'));
       res.writeHead(200, {'Content-Type': 'json'});
       res.end(JSON.stringify('Nothing Here'));
     } else {
       var song_id = songs[0].id
       var song = await lyricist.song(song_id, { fetchLyrics: true });
-      fs.writeFile(cache_path, JSON.stringify(song.lyrics));
+      fs.writeFileSync(cache_path, JSON.stringify(song.lyrics));
       console.log("Song saved to cache!");
       res.writeHead(200, {'Content-Type': 'json'});
       res.end(JSON.stringify(song.lyrics));
@@ -167,7 +167,7 @@ var serverfunc = function (req, res) {
   console.log('Got a %s request for %s', req.method, path);
   if (publicRequest(path)) {
     return servePublicFile(path, res);
-  } else if (path == '/test') {
+  } else if (path == '/login') {
     return spotifyLogin(req, res);
   } else if (path == '/callback') {
     return handleCallback(urldata, res);
