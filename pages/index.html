@@ -20,17 +20,20 @@ var refresh_token;
 var current_song;
 var current_lyrics;
 var next_lyrics;
+
+function setText(id, text){
+  document.getElementById(id).innerHtml = text;
+  document.getElementById(id).textContent = text;
+}
+
   function UserAction() {
       window.location.replace("/login");
   }
   function GetLyrics(songname, artist, id) {
     $.getJSON('/song?song=' + songname +
               '&artist=' + artist + '&id=' + id, function(data) {
-        console.log('at least im here')
         var lyrics = data;
-        document.getElementById('text2').html = lyrics;
-        document.getElementById('text2').textContent = lyrics;
-        console.log(access_token);
+        setText('text2', lyrics);
     });
   }
 
@@ -39,22 +42,19 @@ var next_lyrics;
       url: 'https://api.spotify.com/v1/me/player/currently-playing',
       type: 'GET',
       beforeSend: function(xhr) {
-          console.log('Requesting authorization with token: ' + access_token);
+          console.log('Requesting authorization from spotify.');
           xhr.setRequestHeader("Authorization", "Bearer " + access_token);
       },
       success: function(res) {
           console.log('Got response from spotify!');
-          console.log(res);
           var songname = res.item.name;
           var artist = res.item.artists[0].name;
           var album = res.item.album.name;
-          console.log(res.item.id);
           var id = res.item.id
           var txt = 'You are listening to: \n' + songname +
                     '\nby ' + artist +
                     '\nAlbum: ' + album;
-          document.getElementById('maintext').innerHtml = txt;
-          document.getElementById('maintext').textContent = txt;
+          setText('maintext', txt);
           GetLyrics(songname, artist, id);
       }
     });
@@ -68,27 +68,30 @@ var next_lyrics;
   <source src="/public/Wraiths Waltz.mp3" type="audio/mpeg">
 </audio>
 
-<!-- <ul>
-    <li><a class="active" href="/">Home</a></li>
-    <li><a href="/about/">About</a></li>
-    <li><a href="https://github.com/Simoid/Goblet-Death-and-Rebirth"><img src="/public/github.svg" style="height: 18px"></a></li>
-    <li><a href="https://www.facebook.com/gobdevofficial/"><img src="/public/facebook.png" style="height: 18px"></a></li>
-</ul> -->
+<nav class="nav">
+  <h1 id='maintext' style="font-family:verdana; font-size:100%; color:white;">Spotify Lyrics</h1>
+  <button class='button' id="refreshbtn" type="submit" onclick="setSong()"style="vertical-align:middle"><span>Refresh </span></button>
+</nav>
 
-<h1 id='maintext' style="font-family:verdana; font-size:300%; text-align:center; color:white;">Spotify Lyrics</h1>
-<button type="submit" onclick="UserAction()">Login</button>
-<button type="submit" onclick="setSong()">Refresh</button>
-<div class="text">
-  <p id='text2' style="font-family:verdana; font-size:100%; text-align:center; color:white;">Spotify Lyrics</p>
-</div>
+<article class="article">
+  <p id='text2' style="font-family:verdana; font-size:300%; text-align:center; color:white;"></p>
+  <button class='button' id="loginbtn" type="submit" onclick="UserAction()" style="vertical-align:middle"><span>Login </span></button>
+</article>
 
 <script>
-
-  console.log(window.location.href)
-  access_token = new URL(window.location.href).hash.split('&').filter(function(el) { if(el.match('access_token') !== null) return true; })[0].split('=')[1];
-  refresh_token = new URL(window.location.href).hash.split('&').filter(function(el) { if(el.match('refresh_token') !== null) return true; })[0].split('=')[1];
-  console.log('Spotify tokens read.');
-  setSong(access_token)
+  var hash = new URL(window.location.href).hash;
+  if (hash){
+    var loginbtn = document.getElementById('loginbtn');
+    loginbtn.parentNode.removeChild(loginbtn);
+    access_token = hash.split('&').filter(function(el) { if(el.match('access_token') !== null) return true; })[0].split('=')[1];
+    refresh_token = hash.split('&').filter(function(el) { if(el.match('refresh_token') !== null) return true; })[0].split('=')[1];
+    console.log('Spotify tokens read.');
+    setSong(access_token)
+  } else {
+    var refreshbtn = document.getElementById('refreshbtn');
+    refreshbtn.parentNode.removeChild(refreshbtn);
+    setText('text2', "Press login to start.")
+  }
 
 </script>
 

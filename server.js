@@ -28,6 +28,7 @@ var redirect = function(res, uri) {
 
 var getSong = async function(urldata, res) {
   var songname = urldata.query['song'].replace(/[^\x00-\x7F]/g, "");
+  songname = songname.split(" - ")[0];
   var artistname = urldata.query['artist'].replace(/[^\x00-\x7F]/g, "");
   var id = urldata.query['id'];
   var cache_path = cache_dir + id;
