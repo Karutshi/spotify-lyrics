@@ -26,6 +26,15 @@ function setText(id, text){
   document.getElementById(id).textContent = text;
 }
 
+function showLoader(){
+  document.getElementById("text2").style.display = "none";
+  document.getElementById("loader").style.display = "";
+}
+function hideLoader(){
+  document.getElementById("loader").style.display = "none";
+  document.getElementById("text2").style.display = "block";
+}
+
   function UserAction() {
       window.location.replace("/login");
   }
@@ -34,11 +43,13 @@ function setText(id, text){
               '&artist=' + artist + '&id=' + id, function(data) {
         var lyrics = data;
         setText('text2', lyrics);
+        hideLoader();
         document.getElementById('text2').style.color = "yellow";
     });
   }
 
   function setSong() {
+    showLoader();
     jQuery.ajax({
       url: 'https://api.spotify.com/v1/me/player/currently-playing',
       type: 'GET',
@@ -64,18 +75,14 @@ function setText(id, text){
 
 </head>
 <body background="/public/blue.jpeg">
-
-<audio autoplay loop>
-  <source src="/public/Wraiths Waltz.mp3" type="audio/mpeg">
-</audio>
-
 <nav class="nav" style="position:fixed">
   <h1 id='maintext' style="font-family:verdana; font-size:100%; color:white;">Spotify Lyrics</h1>
   <button class='button' id="refreshbtn" type="submit" onclick="setSong()"style="vertical-align:middle"><span>Refresh </span></button>
 </nav>
 
 <article class="article">
-  <p id='text2' style="font-family:verdana; font-size:300%; text-align:center; color:white;"></p>
+  <div id="loader"></div>
+  <p id='text2' style="font-family:verdana; font-size:300%; text-align:center; color:white;" class="animate-bottom"></p>
   <button class='button' id="loginbtn" type="submit" onclick="UserAction()" style="vertical-align:middle"><span>Login </span></button>
 </article>
 
