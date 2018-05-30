@@ -106,6 +106,7 @@ p {
   height: 120px;
   -webkit-animation: spin 2s linear infinite;
   animation: spin 2s linear infinite;
+  display:none;
 }
 
 @-webkit-keyframes spin {
@@ -138,7 +139,6 @@ p {
 }
 
 #text2 {
-  display: none;
   text-align: left;
 }
 
