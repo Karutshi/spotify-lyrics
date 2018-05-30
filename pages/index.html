@@ -72,6 +72,7 @@ function hideLoader(){
                     '\nAlbum: ' + album;
           setText('maintext', txt);
           GetLyrics(songname, artist, id);
+          setTimeout(setSong, 5000);
           setTimeout(setSong, res.item.duration_ms - res.progress_ms - ((new Date).getTime() - res.timestamp) + 100);
       }
     });
