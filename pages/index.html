@@ -28,7 +28,7 @@ function setText(id, text){
 
 function showLoader(){
   document.getElementById("text2").style.display = "none";
-  document.getElementById("loader").style.display = "";
+  document.getElementById("loader").style.display = "block";
 }
 function hideLoader(){
   document.getElementById("loader").style.display = "none";
@@ -65,6 +65,7 @@ function hideLoader(){
             setTimeout(setSong, 5000);
             return;
           }
+          console.log("Show it now!");
           showLoader();
           current_song = id;
           var txt = 'You are listening to: \n' + songname +
