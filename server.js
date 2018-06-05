@@ -30,10 +30,8 @@ var getSong = async function(urldata, res) {
   var songname = urldata.query['song'].replace(/[^\x00-\x7F]/g, "");
   songname = songname.split(" - ")[0];
   songname = songname.replace(new RegExp('.(feat|ft)\..*'), "");
-  console.log(songname);
   var artistname = urldata.query['artist'].replace(/[^\x00-\x7F]/g, "");
   var id = urldata.query['id'];
-  console.log(id != "null" ? "a" : "b");
   var cache_path = cache_dir + (id == "null" ? "no_id" + songname + artistname : id);
   if (fs.existsSync(cache_path)) {
     console.log("Cache hit! Reading song from cache...");
