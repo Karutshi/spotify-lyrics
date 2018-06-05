@@ -29,17 +29,20 @@ var redirect = function(res, uri) {
 var getSong = async function(urldata, res) {
   var songname = urldata.query['song'].replace(/[^\x00-\x7F]/g, "");
   songname = songname.split(" - ")[0];
+  songname = songname.replace(new RegExp('.(feat|ft)\..*'), "");
+  console.log(songname);
   var artistname = urldata.query['artist'].replace(/[^\x00-\x7F]/g, "");
   var id = urldata.query['id'];
-  var cache_path = cache_dir + id;
+  console.log(id != "null" ? "a" : "b");
+  var cache_path = cache_dir + (id == "null" ? "no_id" + songname + artistname : id);
   if (fs.existsSync(cache_path)) {
     console.log("Cache hit! Reading song from cache...");
     fs.readFile(cache_path, function(err, data){
       if (err) {
-        res.writeHead(200, {'Content-Type': 'json'});
+        res.writeHead(200, {'Content-Type': 'text/html'});
         res.end("Could not read cached file!");
       } else {
-        res.writeHead(200, {'Content-Type': 'json'});
+        res.writeHead(200, {'Content-Type': 'text/html'});
         res.end(data);
       }});
   } else {
@@ -48,14 +51,14 @@ var getSong = async function(urldata, res) {
     var songs = await lyricist.search(searchString);
     if (songs === undefined || songs.length == 0) {
       fs.writeFileSync(cache_path, JSON.stringify('Nothing Here'));
-      res.writeHead(200, {'Content-Type': 'json'});
+      res.writeHead(200, {'Content-Type': 'text/html'});
       res.end(JSON.stringify('Nothing Here'));
     } else {
       var song_id = songs[0].id
       var song = await lyricist.song(song_id, { fetchLyrics: true });
       fs.writeFileSync(cache_path, JSON.stringify(song.lyrics));
       console.log("Song saved to cache!");
-      res.writeHead(200, {'Content-Type': 'json'});
+      res.writeHead(200, {'Content-Type': 'text/html'});
       res.end(JSON.stringify(song.lyrics));
     }
     };

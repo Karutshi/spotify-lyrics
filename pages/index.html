@@ -56,6 +56,7 @@ function hideLoader(){
           xhr.setRequestHeader("Authorization", "Bearer " + access_token);
       },
       success: function(res) {
+          console.log(res);
           setTimeout(setSong, res.item.duration_ms - res.progress_ms + 1000);
           var songname = res.item.name;
           var artist = res.item.artists[0].name;
